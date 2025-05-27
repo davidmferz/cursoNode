@@ -1,17 +1,37 @@
 const express = require("express");
 const { Sequelize, where } = require("sequelize");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 
 //configuracion express
 const app = express();
 const puerto = 3000;
 app.use(express.json());
 
+//configuracion de swagger
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "API de Escuela",
+      version: "1.0.0",
+      description: "API para gestionar alumnos de una escuela",
+    },
+    servers: [
+      {
+        url: `http://localhost:${puerto}`,
+      },
+    ],
+  },
+  apis: ["./app2.js"], // Ruta a los archivos donde se encuentran las anotaciones de Swagger
+};
+
 //configuracion de la base de datos
 const dbConfig = {
   host: "localhost",
   user: "root",
   password: "",
-  database: "escuela",
+  database: "Escuela",
   dialect: "mysql",
 };
 
@@ -43,6 +63,16 @@ app.get("/", (req, res) => {
   res.send("Bienvenido a la API de la escuela 2");
 });
 
+/** @swagger
+ * /alumnos:
+ *   get:
+ *     summary: Obtener todos los alumnos
+ *     responses:
+ *       200:
+ *         description: Lista de alumnos obtenida correctamente
+ *       500:
+ *         description: Error al obtener los alumnos
+ */
 app.get("/alumnos", async (req, res) => {
   try {
     const alumnos = await Alumno.findAll(); //SELECT * FROM alumnos
@@ -95,6 +125,12 @@ app.put("/alumnos/:id", async (req, res) => {
   });
   res.json(respuesta);
 });
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerJsDoc(swaggerOptions))
+);
 
 //iniciar el servidor
 app.listen(puerto, () => {
